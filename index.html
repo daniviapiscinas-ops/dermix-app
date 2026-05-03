@@ -1,0 +1,1824 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Dermix Control – Tatuajes & Piercing</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1f1e;
+    --surface: #132a28;
+    --card: #1a3533;
+    --border: #2a4f4c;
+    --accent: #3ecf8e;
+    --accent2: #2ab579;
+    --accent-dim: rgba(62,207,142,0.12);
+    --red: #ff4d4d;
+    --red-dim: rgba(255,77,77,0.12);
+    --yellow: #f5c542;
+    --yellow-dim: rgba(245,197,66,0.12);
+    --text: #e8f5f2;
+    --muted: #7ab5ae;
+    --font-head: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --radius: 14px;
+    --radius-sm: 8px;
+    --transition: 0.2s cubic-bezier(.4,0,.2,1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  button, input, select, textarea { font: inherit; }
+  button { -webkit-tap-highlight-color: transparent; }
+
+  .screen { display: none; min-height: 100vh; flex-direction: column; }
+  .screen.active { display: flex; }
+
+  #loginScreen {
+    align-items: center;
+    justify-content: center;
+    padding: max(18px, env(safe-area-inset-top)) 16px max(18px, env(safe-area-inset-bottom));
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(62,207,142,0.08) 0%, transparent 70%), var(--bg);
+  }
+
+  .login-card {
+    width: 100%;
+    max-width: 430px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: clamp(22px, 6vw, 36px) clamp(18px, 5vw, 32px);
+    animation: fadeUp .5s ease;
+  }
+
+  .login-logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 28px;
+    text-align: center;
+  }
+
+  .logo-icon {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, var(--accent), #1a6e50);
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+  }
+
+  .login-logo h1 {
+    font-family: var(--font-head);
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -.5px;
+  }
+
+  .login-logo span {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  .field { margin-bottom: 16px; min-width: 0; }
+
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    margin-bottom: 6px;
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    width: 100%;
+    min-height: 44px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 11px 14px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 16px;
+    outline: none;
+    transition: border-color var(--transition);
+  }
+
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus { border-color: var(--accent); }
+
+  .field select option { background: var(--card); }
+  .field textarea { resize: vertical; min-height: 88px; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    min-height: 44px;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all var(--transition);
+    white-space: nowrap;
+  }
+
+  .btn-primary { background: var(--accent); color: #0d1f1e; font-weight: 700; width: 100%; }
+  .btn-primary:hover { background: #5fffab; transform: translateY(-1px); }
+  .btn-secondary { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(62,207,142,0.3); }
+  .btn-secondary:hover { background: rgba(62,207,142,0.2); }
+  .btn-danger { background: var(--red-dim); color: var(--red); border: 1px solid rgba(255,77,77,0.3); }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-sm { padding: 8px 14px; font-size: 13px; min-height: 38px; }
+
+  .auth-toggle { margin-top: 12px; text-align: center; color: var(--muted); font-size: 13px; }
+  .auth-toggle button { background: none; border: 0; color: var(--accent); cursor: pointer; font-weight: 700; }
+  .auth-error { display: none; margin-top: 12px; color: var(--red); font-size: 13px; text-align: center; }
+
+  #appScreen { padding-bottom: calc(82px + env(safe-area-inset-bottom)); }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(13,31,30,.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px max(14px, env(safe-area-inset-left)) 12px max(14px, env(safe-area-inset-right));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .topbar-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .topbar-logo { font-family: var(--font-head); font-weight: 800; font-size: 17px; flex-shrink: 0; }
+  .topbar-logo span { color: var(--accent); }
+
+  .badge-studio {
+    background: var(--accent-dim);
+    border: 1px solid rgba(62,207,142,.25);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 11px;
+    color: var(--accent);
+    white-space: nowrap;
+    max-width: 42vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .topbar-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: rgba(13,31,30,.95);
+    backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border);
+    display: flex;
+    padding: 8px max(4px, env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(4px, env(safe-area-inset-left));
+  }
+
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 2px;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 500;
+    transition: color var(--transition);
+    border: none;
+    background: none;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    min-width: 0;
+  }
+
+  .nav-item .nav-icon { font-size: 20px; transition: transform var(--transition); line-height: 1; }
+  .nav-item.active { color: var(--accent); }
+  .nav-item.active .nav-icon { transform: translateY(-2px); }
+
+  .tab-panel {
+    display: none;
+    padding: 18px clamp(12px, 4vw, 20px);
+    animation: fadeIn .25s ease;
+    width: 100%;
+    max-width: 920px;
+    margin: 0 auto;
+  }
+
+  .tab-panel.active { display: block; }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    gap: 10px;
+  }
+
+  .section-title {
+    font-family: var(--font-head);
+    font-size: 18px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-title .icon { font-size: 20px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: clamp(14px, 4vw, 16px);
+    margin-bottom: 12px;
+  }
+
+  .card-title {
+    font-family: var(--font-head);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    margin-bottom: 12px;
+  }
+
+  .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  .chip {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 7px 12px;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all var(--transition);
+    user-select: none;
+  }
+
+  .chip:hover,
+  .chip.selected {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .toggle-row:last-child { border-bottom: none; }
+  .toggle-label { font-size: 14px; }
+  .toggle-desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .toggle-switch { position: relative; width: 46px; height: 26px; flex-shrink: 0; }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+
+  .toggle-track {
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    border-radius: 13px;
+    cursor: pointer;
+    transition: background var(--transition);
+  }
+
+  .toggle-track:before {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 3px;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform var(--transition);
+  }
+
+  .toggle-switch input:checked + .toggle-track { background: var(--accent); }
+  .toggle-switch input:checked + .toggle-track:before { transform: translateX(20px); }
+
+  .program-cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .program-card {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 12px;
+    cursor: pointer;
+    transition: all var(--transition);
+    text-align: center;
+  }
+
+  .program-card.selected { border-color: var(--accent); background: var(--accent-dim); }
+  .program-temp { font-family: var(--font-head); font-size: 22px; font-weight: 800; }
+  .program-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .semaforo {
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+    transition: all var(--transition);
+  }
+
+  .semaforo.green { background: rgba(62,207,142,.15); border: 1px solid rgba(62,207,142,.4); color: var(--accent); }
+  .semaforo.red { background: var(--red-dim); border: 1px solid rgba(255,77,77,.4); color: var(--red); }
+  .semaforo.yellow { background: var(--yellow-dim); border: 1px solid rgba(245,197,66,.4); color: var(--yellow); }
+  .semaforo.hidden { display: none; }
+
+  .result-banner {
+    border-radius: var(--radius);
+    padding: 24px;
+    text-align: center;
+    margin: 16px 0;
+  }
+
+  .result-banner.valid { background: linear-gradient(135deg, rgba(62,207,142,.2), rgba(62,207,142,.05)); border: 2px solid var(--accent); }
+  .result-banner.invalid { background: linear-gradient(135deg, rgba(255,77,77,.2), rgba(255,77,77,.05)); border: 2px solid var(--red); }
+  .result-icon { font-size: 48px; display: block; margin-bottom: 8px; }
+  .result-title { font-family: var(--font-head); font-size: 22px; font-weight: 800; }
+  .result-lot { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  .alert-card {
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    margin-bottom: 10px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .alert-card.warn { background: var(--yellow-dim); border: 1px solid rgba(245,197,66,.3); }
+  .alert-card.info { background: var(--accent-dim); border: 1px solid rgba(62,207,142,.25); }
+  .alert-card.danger { background: var(--red-dim); border: 1px solid rgba(255,77,77,.3); }
+  .alert-icon { font-size: 22px; flex-shrink: 0; }
+  .alert-title { font-weight: 600; font-size: 13px; margin-bottom: 3px; }
+  .alert-body { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  .progress-wrap { margin: 8px 0; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .progress-bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width .5s ease; }
+  .progress-fill.warn { background: var(--yellow); }
+  .progress-fill.danger { background: var(--red); }
+
+  .item-list { margin-top: 8px; }
+
+  .item-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 6px 10px;
+    font-size: 12px;
+    margin: 4px 4px 4px 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .item-tag .remove { cursor: pointer; color: var(--muted); font-size: 14px; line-height: 1; }
+  .item-tag .remove:hover { color: var(--red); }
+
+  .photo-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-sm);
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--transition);
+    position: relative;
+    overflow: hidden;
+    min-height: 120px;
+  }
+
+  .photo-zone:hover { border-color: var(--accent); background: var(--accent-dim); }
+  .photo-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .photo-preview { width: 100%; max-height: 160px; object-fit: cover; border-radius: var(--radius-sm); margin-top: 8px; display: none; }
+  .photo-text { font-size: 13px; color: var(--muted); margin-top: 6px; }
+
+  .normativa-list li {
+    font-size: 13px;
+    color: var(--muted);
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    list-style: none;
+    display: flex;
+    gap: 8px;
+  }
+
+  .normativa-list li:before { content: '▸'; color: var(--accent); flex-shrink: 0; }
+
+  .disclaimer {
+    background: var(--yellow-dim);
+    border: 1px solid rgba(245,197,66,.3);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    font-size: 12px;
+    color: var(--yellow);
+    margin-top: 12px;
+    line-height: 1.5;
+  }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(0,0,0,.7);
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .modal-overlay.open { display: flex; animation: fadeIn .2s ease; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px 20px 0 0;
+    width: 100%;
+    max-width: 600px;
+    padding: 24px;
+    max-height: 85vh;
+    overflow-y: auto;
+    animation: slideUp .3s ease;
+  }
+
+  .modal-title {
+    font-family: var(--font-head);
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .modal-actions { display: flex; gap: 8px; margin-top: 20px; }
+  .modal-actions .btn { flex: 1; }
+
+  .cycle-log-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: border-color var(--transition);
+  }
+
+  .cycle-log-item:hover { border-color: var(--accent); }
+  .cycle-status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .cycle-status-dot.valid { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+  .cycle-status-dot.invalid { background: var(--red); box-shadow: 0 0 6px var(--red); }
+  .cycle-lot { font-family: var(--font-head); font-weight: 700; font-size: 14px; }
+  .cycle-meta { font-size: 11px; color: var(--muted); overflow-wrap: anywhere; }
+  .cycle-badge { margin-left: auto; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 10px; flex-shrink: 0; }
+  .cycle-badge.valid { background: var(--accent-dim); color: var(--accent); }
+  .cycle-badge.invalid { background: var(--red-dim); color: var(--red); }
+
+  .profile-avatar {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--accent), #1a6e50);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    flex-shrink: 0;
+  }
+
+  .profile-row { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+  .profile-name { font-family: var(--font-head); font-size: 18px; font-weight: 800; }
+  .profile-role { font-size: 12px; color: var(--muted); }
+  .stat-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+  .stat-card { background: var(--card); border-radius: var(--radius-sm); padding: 14px; text-align: center; }
+  .stat-num { font-family: var(--font-head); font-size: 26px; font-weight: 800; color: var(--accent); }
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; margin-top: 2px; }
+
+  .bio-reminder {
+    background: linear-gradient(135deg, rgba(245,197,66,.15), rgba(245,197,66,.05));
+    border: 1px solid rgba(245,197,66,.35);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 12px;
+  }
+
+  .bio-reminder-title { font-family: var(--font-head); font-size: 15px; font-weight: 700; color: var(--yellow); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .bio-reminder-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .bio-date { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .bio-date span { color: var(--accent); font-weight: 500; }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .5; } }
+  .pulse { animation: pulse 2s ease infinite; }
+
+  .row { display: flex; gap: 10px; }
+  .row .field { flex: 1; }
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+  .text-muted { color: var(--muted); font-size: 13px; }
+  .text-accent { color: var(--accent); }
+  .text-red { color: var(--red); }
+  .mb-0 { margin-bottom: 0 !important; }
+  .mt-8 { margin-top: 8px; }
+  .mt-16 { margin-top: 16px; }
+  .hidden { display: none !important; }
+  .full-btn { width: 100%; }
+  .lot-number { font-family: monospace; font-size: 13px; background: var(--card); border: 1px solid var(--border); padding: 4px 10px; border-radius: 6px; color: var(--accent); white-space: nowrap; }
+
+  @media (max-width: 680px) {
+    .row { flex-direction: column; gap: 0; }
+    .row[style*="align-items:flex-end"] { gap: 8px; }
+    .row[style*="align-items:flex-end"] .btn { width: 100%; }
+    .section-header { align-items: flex-start; flex-direction: column; }
+    .topbar-logo { font-size: 15px; }
+    .topbar .btn-sm { padding: 7px 10px; font-size: 12px; }
+    .photo-zone { padding: 14px 10px; }
+    .modal { padding: 20px 16px calc(20px + env(safe-area-inset-bottom)); }
+  }
+
+  @media (max-width: 430px) {
+    .login-logo span { letter-spacing: .9px; }
+    .badge-studio { display: none; }
+    .program-temp { font-size: 19px; }
+    .program-label, .nav-item { font-size: 9px; }
+    .nav-item .nav-icon { font-size: 18px; }
+    .stat-num { font-size: 23px; }
+    .cycle-log-item { align-items: flex-start; }
+    .cycle-badge { align-self: flex-start; }
+    .modal-actions, div[style*="grid-template-columns:1fr 1fr"] { grid-template-columns: 1fr !important; display: grid !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="loginScreen" class="screen active">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-icon">🩺</div>
+      <h1>Dermix Control</h1>
+      <span>Registro y Trazabilidad de Esterilización</span>
+    </div>
+
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="loginEmail" placeholder="estudio@ejemplo.com" autocomplete="email">
+    </div>
+
+    <div class="field">
+      <label>Contraseña</label>
+      <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="field">
+      <label>Nombre del Estudio</label>
+      <input type="text" id="loginStudio" placeholder="Black Ink Studio">
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label>CIF</label>
+        <input type="text" id="loginCIF" placeholder="B12345678">
+      </div>
+      <div class="field">
+        <label>Responsable Sanitario</label>
+        <input type="text" id="loginRespSan" placeholder="Nombre y apellidos">
+      </div>
+    </div>
+
+    <button class="btn btn-primary mt-16" id="authBtn" onclick="handleAuth()">Acceder →</button>
+    <div class="auth-toggle">
+      ¿No tienes cuenta?
+      <button type="button" onclick="toggleAuthMode()" id="authModeBtn">Crear cuenta</button>
+    </div>
+    <div class="auth-error" id="authError"></div>
+  </div>
+</div>
+
+<div id="appScreen" class="screen">
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">Dermix<span>Control</span></div>
+      <div class="badge-studio" id="studioName">Studio</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost btn-sm" onclick="showBioModal()">🧫 Bio</button>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()">✕</button>
+    </div>
+  </div>
+
+  <div id="tab-ciclo" class="tab-panel active">
+    <div class="section-header">
+      <div class="section-title"><span class="icon">🔬</span> Nuevo Ciclo</div>
+      <span class="lot-number" id="lotDisplay">Lote: --</span>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Programa de Esterilización</div>
+      <div class="program-cards">
+        <div class="program-card selected" id="prog134" onclick="selectProgram('134')">
+          <div class="program-temp text-accent">134°C</div>
+          <div class="program-label">Carga Crítica</div>
+        </div>
+        <div class="program-card" id="prog121" onclick="selectProgram('121')">
+          <div class="program-temp">121°C</div>
+          <div class="program-label">Carga Sensible</div>
+        </div>
+      </div>
+
+      <div class="semaforo hidden" id="semaforoAlert">
+        <span>⚠️</span>
+        <div>
+          <div>ERROR: Parámetros de esterilización no alcanzados.</div>
+          <div style="font-size:12px;font-weight:400;margin-top:2px">Carga NO APTA para su uso. Revise presión y tiempo.</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Fecha y Hora</label>
+          <input type="datetime-local" id="cycleDate">
+        </div>
+        <div class="field">
+          <label>Técnico</label>
+          <input type="text" id="cycleTech" placeholder="Nombre del técnico">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label id="pressureLabel">Presión (bar) — Rango: 2.0-2.3</label>
+          <input type="number" id="cyclePressure" step="0.1" min="1" max="4" placeholder="2.1" oninput="validateParams()">
+        </div>
+        <div class="field">
+          <label id="timeLabel">Tiempo meseta (min) — Mín: 5</label>
+          <input type="number" id="cycleTime" step="0.5" min="1" max="60" placeholder="18" oninput="validateParams()">
+        </div>
+      </div>
+
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Viraje Químico (Indicador)</div>
+          <div class="toggle-desc">Indicador externo de tira reactiva</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggleChemical">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Integridad de Bolsa</div>
+          <div class="toggle-desc">Sellado correcto sin roturas</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggleBag">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Evidencia Fotográfica</div>
+      <div class="row">
+        <div style="flex:1">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:500">📄 Ticket del Autoclave</div>
+          <div class="photo-zone">
+            <input type="file" accept="image/*" capture="environment" onchange="previewPhoto(this,'prevTicket')">
+            <div>📷</div>
+            <div class="photo-text">Capturar / Subir</div>
+            <img id="prevTicket" class="photo-preview">
+          </div>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:500">🧪 Tira Reactiva</div>
+          <div class="photo-zone">
+            <input type="file" accept="image/*" capture="environment" onchange="previewPhoto(this,'prevStrip')">
+            <div>📷</div>
+            <div class="photo-text">Capturar / Subir</div>
+            <img id="prevStrip" class="photo-preview">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Instrumentos del Ciclo</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Selecciona los instrumentos incluidos:</div>
+
+      <div style="margin-bottom:10px">
+        <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">🖋 Tatuaje</div>
+        <div class="chip-grid" id="chips-tattoo"></div>
+      </div>
+
+      <div style="margin-bottom:10px">
+        <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">💎 Piercing</div>
+        <div class="chip-grid" id="chips-piercing"></div>
+      </div>
+
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">💍 Joyería</div>
+        <div class="chip-grid" id="chips-jewel"></div>
+      </div>
+    </div>
+
+    <div class="card" id="jewelMaterialCard">
+      <div class="card-title">Material de la Joya (Trazabilidad)</div>
+      <div class="field mb-0">
+        <label>Material</label>
+        <select id="jewelMaterial">
+          <option value="">— Seleccionar —</option>
+          <option value="ti_g23">Titanio Grado Implante (G23) ✅ Recomendado</option>
+          <option value="316l">Acero Quirúrgico (316L)</option>
+          <option value="gold_14k">Oro 14k</option>
+          <option value="gold_18k">Oro 18k</option>
+          <option value="niobio">Niobio</option>
+        </select>
+      </div>
+      <div class="text-muted mt-8" style="font-size:11px">⚠️ Crítico para trazabilidad en caso de reacción alérgica del cliente.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Material Desechable (Esterilidad de Fábrica)</div>
+      <div class="text-muted" style="font-size:12px;margin-bottom:10px">
+        Agujas, cartuchos y tintas no pasan por el autoclave. Se registra la trazabilidad del fabricante.
+      </div>
+
+      <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px">🪡 Agujas / Cartuchos</div>
+      <div class="row" style="align-items:flex-end">
+        <div class="field mb-0">
+          <label>Marca</label>
+          <input type="text" id="needleBrand" placeholder="Marca">
+        </div>
+        <div class="field mb-0">
+          <label>Lote</label>
+          <input type="text" id="needleLot" placeholder="Nº Lote">
+        </div>
+        <div class="field mb-0">
+          <label>Caducidad</label>
+          <input type="date" id="needleExp">
+        </div>
+        <button class="btn btn-secondary btn-sm" style="flex-shrink:0;margin-bottom:0" onclick="addDisposable('needle')">＋</button>
+      </div>
+      <div class="item-list" id="needle-list"></div>
+
+      <div class="divider"></div>
+
+      <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px">🎨 Tintas</div>
+      <div class="row" style="align-items:flex-end">
+        <div class="field mb-0">
+          <label>Marca</label>
+          <input type="text" id="inkBrand" placeholder="Marca">
+        </div>
+        <div class="field mb-0">
+          <label>Lote</label>
+          <input type="text" id="inkLot" placeholder="Nº Lote">
+        </div>
+        <div class="field mb-0">
+          <label>Caducidad</label>
+          <input type="date" id="inkExp">
+        </div>
+        <button class="btn btn-secondary btn-sm" style="flex-shrink:0;margin-bottom:0" onclick="addDisposable('ink')">＋</button>
+      </div>
+      <div class="item-list" id="ink-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Observaciones</div>
+      <div class="field mb-0">
+        <textarea id="cycleNotes" placeholder="Incidencias o anotaciones del ciclo..."></textarea>
+      </div>
+    </div>
+
+    <div id="cycleResultPreview" class="hidden"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <button class="btn btn-secondary" onclick="generateCycle(false)">⚠️ Ciclo Fallido</button>
+      <button class="btn btn-primary" id="btnValid" onclick="generateCycle(true)">✓ Ciclo Válido</button>
+    </div>
+  </div>
+
+  <div id="tab-history" class="tab-panel">
+    <div class="section-header">
+      <div class="section-title"><span class="icon">📋</span> Historial</div>
+      <button class="btn btn-ghost btn-sm" onclick="clearHistory()">Limpiar</button>
+    </div>
+    <div id="historyList">
+      <div class="text-muted" style="text-align:center;padding:32px 0">
+        <div style="font-size:36px;margin-bottom:8px">🗂️</div>
+        Aún no hay ciclos registrados
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-equip" class="tab-panel">
+    <div class="section-header">
+      <div class="section-title"><span class="icon">⚙️</span> Estado del Equipo</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Contador de Ciclos</div>
+      <div class="stat-grid" style="margin-bottom:12px">
+        <div class="stat-card">
+          <div class="stat-num" id="cyclCountDisplay">0</div>
+          <div class="stat-label">Ciclos Totales</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="cyclesSinceWater" style="color:var(--yellow)">0</div>
+          <div class="stat-label">Desde último cambio agua</div>
+        </div>
+      </div>
+
+      <div class="progress-wrap" id="waterProgressWrap">
+        <div class="progress-label">
+          <span>Cambio de Agua Destilada</span>
+          <span id="waterPct">0 / 50</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="waterBar" style="width:0%"></div>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm mt-8" onclick="resetWater()">💧 Registrar Cambio de Agua</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Mantenimiento Semanal</div>
+
+      <div class="alert-card warn">
+        <div class="alert-icon">🔧</div>
+        <div>
+          <div class="alert-title">Limpieza de Junta de Puerta y Filtro</div>
+          <div class="alert-body">Limpiar con paño húmedo cada semana.</div>
+          <div style="margin-top:8px">
+            <label class="toggle-switch" style="display:inline-flex;align-items:center;gap:8px;width:auto">
+              <input type="checkbox" id="maintJunta" onchange="saveMaint('junta',this.checked)">
+              <span class="toggle-track"></span>
+              <span style="font-size:12px;color:var(--muted)">Realizado esta semana</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert-card info">
+        <div class="alert-icon">💧</div>
+        <div>
+          <div class="alert-title">Cambio de Agua Destilada</div>
+          <div class="alert-body">Usar siempre agua destilada o bidestilada. Cambiar cada 50 ciclos o mensualmente.</div>
+        </div>
+      </div>
+
+      <div class="alert-card danger" id="annualAlert">
+        <div class="alert-icon">📅</div>
+        <div>
+          <div class="alert-title">Revisión Técnica Anual</div>
+          <div class="alert-body">El autoclave debe disponer del certificado de mantenimiento vigente.</div>
+          <div class="bio-date mt-8">Última revisión: <span id="lastAnnualDate">No registrada</span></div>
+          <button class="btn btn-secondary btn-sm mt-8" onclick="registerAnnual()">Registrar Revisión</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bio-reminder">
+      <div class="bio-reminder-title">🧫 Control Biológico (Test de Esporas)</div>
+      <div class="bio-reminder-desc">
+        El test de esporas es el método definitivo para validar la esterilización. Se recomienda cada 30 días y tras mantenimiento del autoclave.
+      </div>
+      <div class="bio-date mt-8">
+        Próximo test recomendado: <span id="bioNextDate" class="pulse">Calculando…</span>
+      </div>
+      <div class="bio-date">
+        Último resultado: <span id="bioLastResult">No registrado</span>
+      </div>
+      <div id="bioDaysAlert" class="semaforo hidden mt-8"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
+        <button class="btn btn-secondary btn-sm" onclick="showBioModal()">📋 Registrar Test</button>
+        <button class="btn btn-ghost btn-sm" onclick="showBioHistory()">Ver Historial</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-norm" class="tab-panel">
+    <div class="section-title" style="margin-bottom:16px"><span class="icon">📜</span> Normativa y Legal</div>
+
+    <div class="card">
+      <div class="card-title">Normativa Aplicable</div>
+      <ul class="normativa-list">
+        <li>Real Decreto 1344/1992: Regulación de condiciones higiénico-sanitarias.</li>
+        <li>Decreto autonómico correspondiente según CCAA.</li>
+        <li>UNE-EN ISO 17665-1: Esterilización por vapor de agua.</li>
+        <li>UNE-EN 13060: Pequeños esterilizadores de vapor.</li>
+        <li>GDPR / LOPD-GDD: Protección de datos de clientes y registros.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Requisitos de Registro</div>
+      <ul class="normativa-list">
+        <li>Mantener registro de cada ciclo de esterilización.</li>
+        <li>Guardar tickets impresos del autoclave.</li>
+        <li>Registrar lote de agujas, tintas y joyería por cliente y sesión.</li>
+        <li>Disponer del certificado de validación y revisión técnica anual.</li>
+      </ul>
+    </div>
+
+    <div class="disclaimer">
+      ⚠️ <strong>Aviso Legal:</strong> Dermix Control es una herramienta de apoyo y NO sustituye la normativa oficial vigente.
+    </div>
+
+    <div class="card mt-16">
+      <div class="card-title">Perfil del Centro</div>
+      <div class="field">
+        <label>Nombre del Estudio</label>
+        <input type="text" id="profileStudio" placeholder="Nombre">
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>CIF</label>
+          <input type="text" id="profileCIF" placeholder="B12345678">
+        </div>
+        <div class="field">
+          <label>Responsable Sanitario</label>
+          <input type="text" id="profileResp" placeholder="Nombre completo">
+        </div>
+      </div>
+      <button class="btn btn-secondary full-btn" onclick="saveProfile()">Guardar Perfil</button>
+    </div>
+  </div>
+
+  <div id="tab-profile" class="tab-panel">
+    <div class="section-title" style="margin-bottom:16px"><span class="icon">👤</span> Perfil & Estadísticas</div>
+
+    <div class="card">
+      <div class="profile-row">
+        <div class="profile-avatar">🎨</div>
+        <div>
+          <div class="profile-name" id="profileNameDisplay">—</div>
+          <div class="profile-role" id="profileRoleDisplay">—</div>
+          <div class="profile-role" id="profileCIFDisplay">—</div>
+        </div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-num" id="statTotal">0</div>
+          <div class="stat-label">Ciclos Totales</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num text-accent" id="statValid">0</div>
+          <div class="stat-label">Ciclos Válidos</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num text-red" id="statInvalid">0</div>
+          <div class="stat-label">Ciclos Fallidos</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statPercent">—</div>
+          <div class="stat-label">Tasa Éxito</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mt-16">
+      <div class="card-title">Acciones</div>
+      <button class="btn btn-ghost full-btn mb-0" onclick="exportData()" style="margin-bottom:8px">📤 Exportar Registros (JSON)</button>
+      <button class="btn btn-danger full-btn" onclick="doLogout()">Cerrar Sesión</button>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="showTab('ciclo',this)">
+      <span class="nav-icon">🔬</span>Ciclo
+    </button>
+    <button class="nav-item" onclick="showTab('history',this)">
+      <span class="nav-icon">📋</span>Historial
+    </button>
+    <button class="nav-item" onclick="showTab('equip',this)">
+      <span class="nav-icon">⚙️</span>Equipo
+    </button>
+    <button class="nav-item" onclick="showTab('norm',this)">
+      <span class="nav-icon">📜</span>Normas
+    </button>
+    <button class="nav-item" onclick="showTab('profile',this)">
+      <span class="nav-icon">👤</span>Perfil
+    </button>
+  </nav>
+</div>
+
+<div class="modal-overlay" id="bioModal">
+  <div class="modal">
+    <div class="modal-title">🧫 Registrar Control Biológico</div>
+    <p class="text-muted" style="font-size:13px;margin-bottom:16px">
+      El test de esporas se recomienda cada 30 días y tras mantenimiento del autoclave.
+    </p>
+    <div class="field">
+      <label>Fecha del Test</label>
+      <input type="date" id="bioDate">
+    </div>
+    <div class="field">
+      <label>Resultado</label>
+      <select id="bioResult">
+        <option value="negative">✅ Negativo</option>
+        <option value="positive">❌ Positivo</option>
+        <option value="pending">⏳ Pendiente</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Marca / Referencia del Indicador</label>
+      <input type="text" id="bioMarca" placeholder="Ej: Crosstex, Mesa Labs...">
+    </div>
+    <div class="field">
+      <label>Notas</label>
+      <textarea id="bioNotes" placeholder="Observaciones adicionales..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeBioModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveBioTest()">Guardar Test</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="bioHistModal">
+  <div class="modal">
+    <div class="modal-title">📋 Historial Control Biológico</div>
+    <div id="bioHistList"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost full-btn" onclick="document.getElementById('bioHistModal').classList.remove('open')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+/*
+  IMPORTANTE:
+  Sustituye estos datos por los de tu proyecto Firebase.
+*/
+const firebaseConfig = {
+  apiKey: "AIzaSyDrZIFbi4WcPyemoE0ADVV0vW7ETMgwNo8",
+  authDomain: "dermix-control-app.firebaseapp.com",
+  projectId: "dermix-control-app",
+  storageBucket: "dermix-control-app.firebasestorage.app",
+  messagingSenderId: "372045775945",
+  appId: "1:372045775945:web:dfcc44f791453dc4e36b98"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
+
+let currentUser = null;
+let authMode = 'login';
+let saveTimer = null;
+
+const INSTRUMENTS = {
+  tattoo: ['Grips de acero','Tubos','Punteras metálicas','Varillas porta-agujas','Tijeras de curas'],
+  piercing: ['Pinzas Pennington','Pinzas Foerster','Pinzas de Septum','Pinzas porta-joyas','Tubos receptores','Dilatadores metálicos','Punch dérmico'],
+  jewel: ['Barras de titanio','Aros acero quirúrgico','Labrets','Microdermales']
+};
+
+let appState = {
+  profile: {
+    studio: '',
+    cif: '',
+    resp: '',
+    email: ''
+  },
+  program: '134',
+  selectedInstruments: [],
+  disposables: {
+    needle: [],
+    ink: []
+  },
+  cycles: [],
+  cycleCount: 0,
+  cyclesSinceWater: 0,
+  bioTests: [],
+  maint: {
+    junta: false
+  },
+  lastAnnualDate: null
+};
+
+function showAuthError(message) {
+  const el = document.getElementById('authError');
+  el.textContent = message;
+  el.style.display = 'block';
+}
+
+function hideAuthError() {
+  document.getElementById('authError').style.display = 'none';
+}
+
+function toggleAuthMode() {
+  authMode = authMode === 'login' ? 'register' : 'login';
+  document.getElementById('authBtn').textContent = authMode === 'login' ? 'Acceder →' : 'Crear cuenta →';
+  document.getElementById('authModeBtn').textContent = authMode === 'login' ? 'Crear cuenta' : 'Ya tengo cuenta';
+  hideAuthError();
+}
+
+async function handleAuth() {
+  hideAuthError();
+
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPass').value.trim();
+  const studio = document.getElementById('loginStudio').value.trim();
+  const cif = document.getElementById('loginCIF').value.trim();
+  const resp = document.getElementById('loginRespSan').value.trim();
+
+  if (!email || !pass) {
+    showAuthError('Introduce email y contraseña.');
+    return;
+  }
+
+  if (authMode === 'register' && (!studio || !cif || !resp)) {
+    showAuthError('Para crear cuenta, completa estudio, CIF y responsable sanitario.');
+    return;
+  }
+
+  try {
+    if (authMode === 'register') {
+      const cred = await createUserWithEmailAndPassword(auth, email, pass);
+      currentUser = cred.user;
+      appState.profile = { studio, cif, resp, email };
+      await saveStateNow();
+    } else {
+      await signInWithEmailAndPassword(auth, email, pass);
+    }
+  } catch (err) {
+    showAuthError(firebaseErrorToText(err.code));
+  }
+}
+
+function firebaseErrorToText(code) {
+  const map = {
+    'auth/email-already-in-use': 'Este email ya está registrado.',
+    'auth/invalid-email': 'El email no es válido.',
+    'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres.',
+    'auth/invalid-credential': 'Email o contraseña incorrectos.',
+    'auth/missing-password': 'Introduce la contraseña.'
+  };
+  return map[code] || 'Error de acceso. Revisa los datos e inténtalo de nuevo.';
+}
+
+async function loadStateFromFirestore(uid) {
+  const snap = await getDoc(doc(db, 'users', uid));
+  if (snap.exists()) {
+    appState = {
+      ...appState,
+      ...snap.data().appState
+    };
+  }
+}
+
+async function saveStateNow() {
+  if (!currentUser) return;
+
+  localStorage.setItem('dermix_state_backup', JSON.stringify(appState));
+
+  await setDoc(doc(db, 'users', currentUser.uid), {
+    email: currentUser.email,
+    appState,
+    updatedAt: serverTimestamp()
+  }, { merge: true });
+}
+
+function saveState() {
+  localStorage.setItem('dermix_state_backup', JSON.stringify(appState));
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    saveStateNow().catch(console.error);
+  }, 450);
+}
+
+function openApp() {
+  document.getElementById('loginScreen').classList.remove('active');
+  document.getElementById('appScreen').classList.add('active');
+  initApp();
+}
+
+function closeApp() {
+  document.getElementById('appScreen').classList.remove('active');
+  document.getElementById('loginScreen').classList.add('active');
+}
+
+async function doLogout() {
+  await saveStateNow().catch(console.error);
+  await signOut(auth);
+  closeApp();
+}
+
+onAuthStateChanged(auth, async (user) => {
+  currentUser = user;
+
+  if (!user) {
+    closeApp();
+    return;
+  }
+
+  try {
+    await loadStateFromFirestore(user.uid);
+  } catch (e) {
+    const backup = localStorage.getItem('dermix_state_backup');
+    if (backup) {
+      appState = {
+        ...appState,
+        ...JSON.parse(backup)
+      };
+    }
+  }
+
+  openApp();
+});
+
+function initApp() {
+  document.getElementById('studioName').textContent = appState.profile.studio || 'Mi Estudio';
+
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  if (!document.getElementById('cycleDate').value) {
+    document.getElementById('cycleDate').value = now.toISOString().slice(0,16);
+  }
+
+  updateLotNumber();
+  buildChips();
+  renderDisposables('needle');
+  renderDisposables('ink');
+
+  document.getElementById('profileStudio').value = appState.profile.studio || '';
+  document.getElementById('profileCIF').value = appState.profile.cif || '';
+  document.getElementById('profileResp').value = appState.profile.resp || '';
+
+  updateProfileDisplay();
+  renderHistory();
+  document.getElementById('maintJunta').checked = !!appState.maint.junta;
+  updateCounters();
+  updateBioDisplay();
+  updateStats();
+
+  if (appState.lastAnnualDate) {
+    document.getElementById('lastAnnualDate').textContent = appState.lastAnnualDate;
+  }
+}
+
+function updateLotNumber() {
+  document.getElementById('lotDisplay').textContent = `Lote: ${getLotNumber()}`;
+}
+
+function getLotNumber() {
+  const n = (appState.cycles.length + 1).toString().padStart(4,'0');
+  const d = new Date().toISOString().slice(0,10).replace(/-/g,'');
+  return `DC-${d}-${n}`;
+}
+
+function showTab(name, el) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  el.classList.add('active');
+}
+
+function selectProgram(prog) {
+  appState.program = prog;
+
+  document.getElementById('prog134').classList.toggle('selected', prog === '134');
+  document.getElementById('prog121').classList.toggle('selected', prog === '121');
+
+  const isC134 = prog === '134';
+
+  document.getElementById('pressureLabel').textContent = isC134
+    ? 'Presión (bar) — Rango: 2.0-2.3'
+    : 'Presión (bar) — Rango: 1.0-1.5';
+
+  document.getElementById('timeLabel').textContent = isC134
+    ? 'Tiempo meseta (min) — Mín: 5'
+    : 'Tiempo meseta (min) — Mín: 15';
+
+  validateParams();
+  saveState();
+}
+
+function validateParams() {
+  const pressure = parseFloat(document.getElementById('cyclePressure').value);
+  const time = parseFloat(document.getElementById('cycleTime').value);
+  const alertBox = document.getElementById('semaforoAlert');
+  const btnValid = document.getElementById('btnValid');
+
+  let valid = true;
+
+  if (!isNaN(pressure) && !isNaN(time)) {
+    if (appState.program === '134') {
+      if (pressure < 2.0 || pressure > 2.3 || time < 5) valid = false;
+    } else {
+      if (pressure < 1.0 || pressure > 1.5 || time < 15) valid = false;
+    }
+  }
+
+  alertBox.classList.toggle('hidden', valid || (isNaN(pressure) && isNaN(time)));
+  alertBox.classList.toggle('red', !valid);
+
+  btnValid.disabled = !valid;
+  btnValid.style.opacity = valid ? '1' : '0.4';
+  btnValid.style.pointerEvents = valid ? 'auto' : 'none';
+
+  return valid;
+}
+
+function buildChips() {
+  buildChipGroup('chips-tattoo', INSTRUMENTS.tattoo, 'tattoo');
+  buildChipGroup('chips-piercing', INSTRUMENTS.piercing, 'piercing');
+  buildChipGroup('chips-jewel', INSTRUMENTS.jewel, 'jewel');
+}
+
+function buildChipGroup(containerId, items, category) {
+  const wrap = document.getElementById(containerId);
+  wrap.innerHTML = '';
+
+  items.forEach(item => {
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.textContent = item;
+    chip.dataset.key = category + '::' + item;
+
+    if (appState.selectedInstruments.includes(chip.dataset.key)) {
+      chip.classList.add('selected');
+    }
+
+    chip.onclick = () => toggleChip(chip);
+    wrap.appendChild(chip);
+  });
+}
+
+function toggleChip(chip) {
+  chip.classList.toggle('selected');
+
+  const key = chip.dataset.key;
+
+  if (chip.classList.contains('selected')) {
+    if (!appState.selectedInstruments.includes(key)) {
+      appState.selectedInstruments.push(key);
+    }
+  } else {
+    appState.selectedInstruments = appState.selectedInstruments.filter(k => k !== key);
+  }
+
+  saveState();
+}
+
+function previewPhoto(input, previewId) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const img = document.getElementById(previewId);
+  img.src = URL.createObjectURL(file);
+  img.style.display = 'block';
+
+  input.parentElement.querySelector('div:first-of-type').style.display = 'none';
+  input.parentElement.querySelector('.photo-text').style.display = 'none';
+}
+
+function addDisposable(type) {
+  const brand = document.getElementById(type === 'needle' ? 'needleBrand' : 'inkBrand').value.trim();
+  const lot = document.getElementById(type === 'needle' ? 'needleLot' : 'inkLot').value.trim();
+  const exp = document.getElementById(type === 'needle' ? 'needleExp' : 'inkExp').value;
+
+  if (!brand || !lot) {
+    alert('Introduce al menos marca y lote.');
+    return;
+  }
+
+  appState.disposables[type].push({
+    brand,
+    lot,
+    exp,
+    id: Date.now()
+  });
+
+  renderDisposables(type);
+
+  document.getElementById(type === 'needle' ? 'needleBrand' : 'inkBrand').value = '';
+  document.getElementById(type === 'needle' ? 'needleLot' : 'inkLot').value = '';
+  document.getElementById(type === 'needle' ? 'needleExp' : 'inkExp').value = '';
+
+  saveState();
+}
+
+function removeDisposable(type, id) {
+  appState.disposables[type] = appState.disposables[type].filter(i => i.id !== id);
+  renderDisposables(type);
+  saveState();
+}
+
+function renderDisposables(type) {
+  const list = document.getElementById(type + '-list');
+  list.innerHTML = '';
+
+  appState.disposables[type].forEach(item => {
+    const tag = document.createElement('div');
+    tag.className = 'item-tag';
+    tag.innerHTML = `
+      <span>🏷 <strong>${item.brand}</strong> | Lote: ${item.lot}${item.exp ? ' | Cad: ' + item.exp : ''}</span>
+      <span class="remove" onclick="removeDisposable('${type}',${item.id})">×</span>
+    `;
+    list.appendChild(tag);
+  });
+}
+
+function generateCycle(isValid) {
+  if (isValid && !validateParams()) {
+    alert('Los parámetros no cumplen los requisitos.');
+    return;
+  }
+
+  const cycle = {
+    id: Date.now(),
+    lot: getLotNumber(),
+    cycleDate: document.getElementById('cycleDate').value,
+    tech: document.getElementById('cycleTech').value || 'No especificado',
+    program: appState.program,
+    pressure: document.getElementById('cyclePressure').value,
+    time: document.getElementById('cycleTime').value,
+    chemical: document.getElementById('toggleChemical').checked,
+    bagOk: document.getElementById('toggleBag').checked,
+    jewelMaterial: document.getElementById('jewelMaterial').value,
+    instruments: [...appState.selectedInstruments],
+    disposables: JSON.parse(JSON.stringify(appState.disposables)),
+    notes: document.getElementById('cycleNotes').value,
+    isValid,
+    createdAt: new Date().toISOString()
+  };
+
+  appState.cycles.push(cycle);
+  appState.cycleCount++;
+  appState.cyclesSinceWater++;
+
+  saveState();
+  updateCounters();
+  updateStats();
+  renderHistory();
+  showCycleResult(cycle);
+  updateLotNumber();
+}
+
+function showCycleResult(cycle) {
+  const container = document.getElementById('cycleResultPreview');
+  container.className = '';
+  container.innerHTML = `
+    <div class="result-banner ${cycle.isValid ? 'valid' : 'invalid'}">
+      <span class="result-icon">${cycle.isValid ? '✅' : '❌'}</span>
+      <div class="result-title">${cycle.isValid ? 'CICLO VÁLIDO' : 'CICLO FALLIDO'}</div>
+      <div class="result-lot">${cycle.lot} · ${cycle.cycleDate || '—'} · Técnico: ${cycle.tech}</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px">
+        ${cycle.program}°C · Presión: ${cycle.pressure || '—'} bar · Tiempo: ${cycle.time || '—'} min<br>
+        Viraje químico: ${cycle.chemical ? '✓' : '✗'} · Integridad bolsa: ${cycle.bagOk ? '✓' : '✗'}
+        ${cycle.jewelMaterial ? '<br>Material joya: ' + getJewelLabel(cycle.jewelMaterial) : ''}
+      </div>
+      ${!cycle.isValid ? '<div style="color:var(--red);font-size:13px;margin-top:8px;font-weight:600">⚠️ Este ciclo no puede ser utilizado.</div>' : ''}
+    </div>
+  `;
+  container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function getJewelLabel(val) {
+  const map = {
+    ti_g23: 'Titanio G23',
+    '316l': 'Acero 316L',
+    gold_14k: 'Oro 14k',
+    gold_18k: 'Oro 18k',
+    niobio: 'Niobio'
+  };
+  return map[val] || val;
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+
+  if (appState.cycles.length === 0) {
+    list.innerHTML = `
+      <div class="text-muted" style="text-align:center;padding:32px 0">
+        <div style="font-size:36px;margin-bottom:8px">🗂️</div>
+        Aún no hay ciclos registrados
+      </div>
+    `;
+    return;
+  }
+
+  list.innerHTML = '';
+
+  [...appState.cycles].reverse().forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'cycle-log-item';
+    el.innerHTML = `
+      <div class="cycle-status-dot ${c.isValid ? 'valid' : 'invalid'}"></div>
+      <div style="flex:1;min-width:0">
+        <div class="cycle-lot">${c.lot}</div>
+        <div class="cycle-meta">${c.cycleDate || '—'} · ${c.tech} · ${c.program}°C</div>
+        <div class="cycle-meta">${c.pressure ? c.pressure + ' bar' : ''} ${c.time ? '· ' + c.time + ' min' : ''}</div>
+      </div>
+      <span class="cycle-badge ${c.isValid ? 'valid' : 'invalid'}">${c.isValid ? 'VÁLIDO' : 'FALLIDO'}</span>
+    `;
+    list.appendChild(el);
+  });
+}
+
+function clearHistory() {
+  if (!confirm('¿Eliminar todos los registros de ciclos?')) return;
+
+  appState.cycles = [];
+  appState.cycleCount = 0;
+  appState.cyclesSinceWater = 0;
+
+  saveState();
+  renderHistory();
+  updateCounters();
+  updateStats();
+  updateLotNumber();
+}
+
+function updateCounters() {
+  document.getElementById('cyclCountDisplay').textContent = appState.cycleCount;
+  document.getElementById('cyclesSinceWater').textContent = appState.cyclesSinceWater;
+
+  const pct = Math.min((appState.cyclesSinceWater / 50) * 100, 100);
+  const bar = document.getElementById('waterBar');
+
+  bar.style.width = pct + '%';
+  document.getElementById('waterPct').textContent = `${appState.cyclesSinceWater} / 50`;
+
+  bar.className = 'progress-fill';
+  if (pct >= 100) bar.classList.add('danger');
+  else if (pct >= 70) bar.classList.add('warn');
+}
+
+function resetWater() {
+  appState.cyclesSinceWater = 0;
+  saveState();
+  updateCounters();
+}
+
+function saveMaint(key, val) {
+  appState.maint[key] = val;
+  saveState();
+}
+
+function registerAnnual() {
+  const today = new Date().toLocaleDateString('es-ES');
+  appState.lastAnnualDate = today;
+  saveState();
+  document.getElementById('lastAnnualDate').textContent = today;
+}
+
+function updateBioDisplay() {
+  const tests = appState.bioTests;
+
+  if (tests.length === 0) {
+    document.getElementById('bioNextDate').textContent = 'No hay tests previos — realiza uno pronto';
+    document.getElementById('bioNextDate').style.color = 'var(--yellow)';
+    document.getElementById('bioLastResult').textContent = 'No registrado';
+    return;
+  }
+
+  const last = tests[tests.length - 1];
+  const lastDate = new Date(last.date);
+  const nextDate = new Date(lastDate);
+  nextDate.setDate(nextDate.getDate() + 30);
+
+  const today = new Date();
+  const daysLeft = Math.round((nextDate - today) / (1000 * 60 * 60 * 24));
+
+  document.getElementById('bioLastResult').textContent =
+    last.result === 'negative' ? '✅ Negativo' :
+    last.result === 'positive' ? '❌ Positivo' :
+    '⏳ Pendiente';
+
+  document.getElementById('bioNextDate').textContent = nextDate.toLocaleDateString('es-ES');
+  document.getElementById('bioNextDate').style.color =
+    daysLeft < 0 ? 'var(--red)' :
+    daysLeft < 7 ? 'var(--yellow)' :
+    'var(--accent)';
+
+  const daysAlert = document.getElementById('bioDaysAlert');
+
+  if (daysLeft < 0) {
+    daysAlert.className = 'semaforo red mt-8';
+    daysAlert.innerHTML = '<span>⚠️</span><div>Test de Esporas VENCIDO — Han pasado ' + Math.abs(daysLeft) + ' días.</div>';
+  } else if (daysLeft <= 7) {
+    daysAlert.className = 'semaforo yellow mt-8';
+    daysAlert.innerHTML = '<span>📅</span><div>Test próximo en <strong>' + daysLeft + ' días</strong>.</div>';
+  } else {
+    daysAlert.className = 'semaforo hidden mt-8';
+  }
+}
+
+function showBioModal() {
+  document.getElementById('bioDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('bioResult').value = 'negative';
+  document.getElementById('bioMarca').value = '';
+  document.getElementById('bioNotes').value = '';
+  document.getElementById('bioModal').classList.add('open');
+}
+
+function closeBioModal() {
+  document.getElementById('bioModal').classList.remove('open');
+}
+
+function saveBioTest() {
+  const date = document.getElementById('bioDate').value;
+  if (!date) {
+    alert('Introduce la fecha del test.');
+    return;
+  }
+
+  const result = document.getElementById('bioResult').value;
+
+  appState.bioTests.push({
+    date,
+    result,
+    marca: document.getElementById('bioMarca').value,
+    notes: document.getElementById('bioNotes').value,
+    id: Date.now()
+  });
+
+  saveState();
+  updateBioDisplay();
+  closeBioModal();
+
+  if (result === 'positive') {
+    setTimeout(() => {
+      alert('🚨 ATENCIÓN: Test de Esporas POSITIVO. Retira el autoclave del servicio.');
+    }, 100);
+  }
+}
+
+function showBioHistory() {
+  const list = document.getElementById('bioHistList');
+
+  if (appState.bioTests.length === 0) {
+    list.innerHTML = '<div class="text-muted" style="text-align:center;padding:20px">Sin tests registrados</div>';
+  } else {
+    list.innerHTML = [...appState.bioTests].reverse().map(t => `
+      <div class="alert-card ${t.result === 'negative' ? 'info' : t.result === 'positive' ? 'danger' : 'warn'}" style="margin-bottom:8px">
+        <div class="alert-icon">${t.result === 'negative' ? '✅' : t.result === 'positive' ? '❌' : '⏳'}</div>
+        <div>
+          <div class="alert-title">${new Date(t.date).toLocaleDateString('es-ES')} — ${t.result === 'negative' ? 'Negativo' : t.result === 'positive' ? 'POSITIVO' : 'Pendiente'}</div>
+          ${t.marca ? '<div class="alert-body">Indicador: ' + t.marca + '</div>' : ''}
+          ${t.notes ? '<div class="alert-body">' + t.notes + '</div>' : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  document.getElementById('bioHistModal').classList.add('open');
+}
+
+function saveProfile() {
+  appState.profile.studio = document.getElementById('profileStudio').value.trim();
+  appState.profile.cif = document.getElementById('profileCIF').value.trim();
+  appState.profile.resp = document.getElementById('profileResp').value.trim();
+  appState.profile.email = currentUser?.email || appState.profile.email;
+
+  saveState();
+
+  document.getElementById('studioName').textContent = appState.profile.studio || 'Mi Estudio';
+  updateProfileDisplay();
+
+  alert('Perfil guardado.');
+}
+
+function updateProfileDisplay() {
+  document.getElementById('profileNameDisplay').textContent = appState.profile.studio || '—';
+  document.getElementById('profileRoleDisplay').textContent = appState.profile.resp || '—';
+  document.getElementById('profileCIFDisplay').textContent = appState.profile.cif ? 'CIF: ' + appState.profile.cif : '—';
+}
+
+function updateStats() {
+  const total = appState.cycles.length;
+  const valid = appState.cycles.filter(c => c.isValid).length;
+  const invalid = total - valid;
+
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statValid').textContent = valid;
+  document.getElementById('statInvalid').textContent = invalid;
+  document.getElementById('statPercent').textContent = total ? Math.round((valid / total) * 100) + '%' : '—';
+}
+
+function exportData() {
+  const data = JSON.stringify(appState, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'dermix_control_export.json';
+  a.click();
+}
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+  });
+});
+
+Object.assign(window, {
+  toggleAuthMode,
+  handleAuth,
+  doLogout,
+  showTab,
+  selectProgram,
+  validateParams,
+  toggleChip,
+  previewPhoto,
+  addDisposable,
+  removeDisposable,
+  generateCycle,
+  clearHistory,
+  resetWater,
+  saveMaint,
+  registerAnnual,
+  showBioModal,
+  closeBioModal,
+  saveBioTest,
+  showBioHistory,
+  saveProfile,
+  exportData
+});
+</script>
+</body>
+</html>
